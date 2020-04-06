@@ -18,14 +18,14 @@ ARCH    :=  -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 CFLAGS  :=  -g -Wall -O2 -ffunction-sections \
             $(ARCH) $(DEFINES)
 
-CFLAGS  +=  $(INCLUDE) -D__SWITCH__ `sdl2-config --cflags` -I /opt/devkitpro/portlibs/switch/lib -I /usr/aarch64-linux-gnu/include -I /home/daniel/daft-switch-project/hode-nx -I /usr/include -I /usr/include/x86_64-linux-gnu -I /home/daniel/daft-switch-project/vcpkg/installed/x64-linux/include/ 
+CFLAGS  +=  $(INCLUDE) -D__SWITCH__ `sdl2-config --cflags` -I /opt/devkitpro/portlibs/switch/lib -I /opt/devkitpro/libnx/include -I /usr/aarch64-linux-gnu/include 
 
 CXXFLAGS    := $(CFLAGS) -fno-rtti -fno-exceptions
 
 ASFLAGS :=  -g $(ARCH)
-LDFLAGS =   -specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,         $(notdir $*.map)
+LDFLAGS =   -specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS    := `sdl2-config --libs`
+LIBS    := -lSDL2 -lnx
 
 LIBDIRS := $(PORTLIBS) $(LIBNX)
 
@@ -106,10 +106,10 @@ endif
 
 
 
-SDL_CFLAGS = `sdl2-config --cflags`
-SDL_LIBS = `sdl2-config --libs`
+#SDL_CFLAGS = `sdl2-config --cflags`
+#SDL_LIBS = `sdl2-config --libs`
 
-CPPFLAGS += -g -Wall -Wpedantic $(SDL_CFLAGS) $(DEFINES) -MMD
+#CPPFLAGS += -g -Wall -Wpedantic $(SDL_CFLAGS) $(DEFINES) -MMD
 
 SRCS = andy.cpp benchmark.cpp fileio.cpp fs_posix.cpp game.cpp \
 	level1_rock.cpp level2_fort.cpp level3_pwr1.cpp level4_isld.cpp \
@@ -121,17 +121,79 @@ SRCS = andy.cpp benchmark.cpp fileio.cpp fs_posix.cpp game.cpp \
 SCALERS := scaler_nearest.cpp scaler_xbr.cpp
 
 OBJS = $(SRCS:.cpp=.o) $(SCALERS:.cpp=.o) 3p/inih/ini.o 3p/libxbr-standalone/xbr.o
-DEPS = $(SRCS:.cpp=.d) $(SCALERS:.cpp=.d) 3p/inih/ini.d 3p/libxbr-standalone/xbr.d
+DEPS = $(SRCS:.cpp=.d) $(SCALERS:.cpp=.d) build/3p/inih/ini.d build/3p/libxbr-standalone/xbr.d
 
-all: hode
+#all: hode
 
-hode: $(OBJS)
+#hode: $(OBJS)
+#	@$(MAKE) --no-print-directory -f $(CURDIR)/Makefile
+#
+#clean:
+#	rm -f $(OBJS) $(DEPS)
+
+#DEPENDS :=  $(OFILES:.o=.d)
+
+.PHONY: $(BUILD) clean all
+
+#---------------------------------------------------------------------------------
+all: $(BUILD)
+
+$(BUILD): $(OBJS)
 	@[ -d $@ ] || mkdir -p $@
-	@$(MAKE) --no-print-directory -f $(CURDIR)/Makefile
-	#$(CXX) $(LDFLAGS) -o $@ $^ $(SDL_LIBS)
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
+#---------------------------------------------------------------------------------
 clean:
-	rm -f $(OBJS) $(DEPS)
+	@echo clean ...
+ifeq ($(strip $(APP_JSON)),)
+	@rm -fr $(BUILD) $(TARGET).nro $(TARGET).nacp $(TARGET).elf
+else
+	@rm -fr $(BUILD) $(TARGET).nsp $(TARGET).nso $(TARGET).npdm $(TARGET).elf
+endif
+
+
+#---------------------------------------------------------------------------------
+else
+.PHONY: all
+
+DEPENDS :=  $(OFILES:.o=.d)
+
+#---------------------------------------------------------------------------------
+# main targets
+#---------------------------------------------------------------------------------
+ifeq ($(strip $(APP_JSON)),)
+
+all :   $(OUTPUT).nro
+
+ifeq ($(strip $(NO_NACP)),)
+$(OUTPUT).nro   :   $(OUTPUT).elf $(OUTPUT).nacp
+else
+$(OUTPUT).nro   :   $(OUTPUT).elf
+endif
+
+else
+
+#else
+
+all :   $(OUTPUT).nsp
+
+$(OUTPUT).nsp   :   $(OUTPUT).nso $(OUTPUT).npdm
+
+$(OUTPUT).nso   :   $(OUTPUT).elf
+
+endif
+
+$(OUTPUT).elf   :   $(OFILES)
+
+$(OFILES_SRC)   : $(HFILES_BIN)
+
+%.bin.o %_bin.h :   %.bin
+#---------------------------------------------------------------------------------
+	@echo $(notdir $<)
+	@$(bin2o)
 
 -include $(DEPS)
 endif
+
+#@[ -d $@ ] || mkdir -p $@
+#$(CXX) $(LDFLAGS) -o $@ $^ $(SDL_LIBS)
