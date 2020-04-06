@@ -18,7 +18,7 @@ ARCH    :=  -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 CFLAGS  :=  -g -Wall -O2 -ffunction-sections \
             $(ARCH) $(DEFINES)
 
-CFLAGS  +=  $(INCLUDE) -D__SWITCH__ `sdl2-config --cflags` -I /usr/include
+CFLAGS  +=  $(INCLUDE) -D__SWITCH__ `sdl2-config --cflags` -I /opt/devkitpro/portlibs/switch/lib -I /usr/aarch64-linux-gnu/include -I /home/daniel/daft-switch-project/hode-nx -I /usr/include -I /usr/include/x86_64-linux-gnu -I /home/daniel/daft-switch-project/vcpkg/installed/x64-linux/include/ 
 
 CXXFLAGS    := $(CFLAGS) -fno-rtti -fno-exceptions
 
