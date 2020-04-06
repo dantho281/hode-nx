@@ -19,7 +19,7 @@
 #define htole32(x) x
 static const bool kByteSwapData = false; // no byteswap needed on little endian
 #else
-#include <machine/endian.h>
+#include <endian.h>
 static const bool kByteSwapData = (__BYTE_ORDER == __BIG_ENDIAN);
 #endif
 

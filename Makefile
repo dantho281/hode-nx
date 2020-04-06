@@ -18,7 +18,7 @@ ARCH    :=  -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 CFLAGS  :=  -g -Wall -O2 -ffunction-sections \
             $(ARCH) $(DEFINES)
 
-CFLAGS  +=  $(INCLUDE) -D__SWITCH__ `sdl2-config --cflags`
+CFLAGS  +=  $(INCLUDE) -D__SWITCH__ `sdl2-config --cflags` -I /usr/include
 
 CXXFLAGS    := $(CFLAGS) -fno-rtti -fno-exceptions
 
